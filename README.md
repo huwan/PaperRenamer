@@ -8,6 +8,8 @@ Rename academic paper files to human friendly names with the paper titles.
 
 PaperRenamer for MacOS is a native MacOS application created from the modified Python script [pdftitle](https://github.com/huwan/pdftitle) using [Platypus](https://sveinbjorn.org/platypus). This is done by wrapping the script in a MacOS application bundle along with an executable binary that runs the script.
 
+**NOTE:** This version also modifies file’s title field in metadata to its filename.
+
 ### Installation
 
 **Available packages**
@@ -57,6 +59,7 @@ Thanks go to Uwe Dauernheim, the original author of the [pdftitle](https://githu
 * [libjpeg](http://www.ijg.org/), a free library for JPEG image compression.
 * [libpng](http://libpng.org/), the free reference library for reading and writing PNGs.
 * [LibTIFF](http://www.libtiff.org/), a library for reading and writing TIFF.
+* [pdfrw](https://github.com/pmaupin/pdfrw), a pure Python library that reads and writes PDFs.
 
 ## License
 

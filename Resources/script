@@ -16,7 +16,7 @@ try:
 except ImportError:
   import xml.etree.ElementTree as etree
   parse_xml = lambda s: etree.parse(s)
-
+from pdfrw import PdfReader, PdfWriter
 
 VERSION = '1.4'
 
@@ -335,11 +335,14 @@ def main(args):
         continue
 
       if args.rename:
+        trailer = PdfReader(f)
+        trailer.Info.Title = title
+        PdfWriter(f, trailer=trailer).write()
         filename = '{}.pdf'.format(sanitize_filename(title))
         filepath = os.path.join(os.path.dirname(f), filename)
         os.rename(f, filepath)
       success += 1
-      
+
     except OSError:
       return 4, 'Error: pdftohtml not found'
     except subprocess.CalledProcessError:
