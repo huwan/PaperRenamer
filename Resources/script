@@ -301,7 +301,7 @@ def extract_title(path, config):
   formatters = [
     format_ligatures,
     format_upper_case,
-    format_weird_case,
+    # format_weird_case,
     format_space_case,
     format_multi_spaces,
     format_linebreak_dash,
