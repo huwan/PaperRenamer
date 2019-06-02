@@ -1,4 +1,4 @@
-# PaperRenamer
+# Paper Renamer
 
 Rename academic paper files to human friendly names with the paper titles.
 
