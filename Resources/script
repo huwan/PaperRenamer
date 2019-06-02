@@ -301,7 +301,7 @@ def extract_title(path, config):
   formatters = [
     format_ligatures,
     format_upper_case,
-    format_weird_case,
+    # format_weird_case,
     format_space_case,
     format_multi_spaces,
     format_linebreak_dash,
@@ -339,7 +339,7 @@ def main(args):
         filepath = os.path.join(os.path.dirname(f), filename)
         os.rename(f, filepath)
       success += 1
-      
+
     except OSError:
       return 4, 'Error: pdftohtml not found'
     except subprocess.CalledProcessError:
