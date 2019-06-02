@@ -33,7 +33,7 @@
 	<key>IconPath</key>
 	<string>Resources/AppIcon.icns</string>
 	<key>Identifier</key>
-	<string>im.atom.PaperRenamer</string>
+	<string>im.atom.PaperRenamerMeta</string>
 	<key>InterfaceType</key>
 	<string>Droplet</string>
 	<key>InterpreterArgs</key>
@@ -41,7 +41,7 @@
 	<key>InterpreterPath</key>
 	<string>/usr/bin/python</string>
 	<key>Name</key>
-	<string>Paper Renamer</string>
+	<string>Paper Renamer Meta</string>
 	<key>NibPath</key>
 	<string>/usr/local/share/platypus/MainMenu.nib</string>
 	<key>OptimizeApplication</key>
