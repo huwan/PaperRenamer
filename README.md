@@ -28,23 +28,6 @@ We provide a profile which saves Platypus's configuration settings for building 
 ### Usage
 Simply launch the `Paper Renamer.app`, drag and drop your pdf files to the square window. You can also open pdf files by selecting it from the menu.
 
-
-## Paper Renamer for Linux
-
-It's convenient to launch a Terminal to run the pdf rename python script in Linux. Here we introduce a better way to rename paper by adding drag and drop support to the script.
-
-You can create .desktop file for the python script used here. With the .desktop file, you can drag and drop your paper pdfs to the desktop icon to rename papers. Please refer to  [this link](https://www.maketecheasier.com/create-desktop-file-linux) for more details on how to create a .desktop file in Linux.
-Here is a sample .desktop file:
-
-```
-[Desktop Entry]
-Name=PaperRenamer
-Exec=/path/to/PaperRenamer/Resources/script %U
-Type=Application
-Icon=/path/to/PaperRenamer/Resources/AppIcon.png
-Name[en_HK]=PDF Rename
-```
-
 ## Credits
 
 Thanks go to Uwe Dauernheim, the original author of the [pdftitle](https://github.com/djui/pdftitle) tool used for PDF article title extraction in Paper Renamer, Sveinbjorn Thordarson, author of [Platypus](https://sveinbjorn.org/platypus) which is a great developer tool that created this MacOS application from command line script, and Sindre Sorhus for [create-dmg](https://github.com/sindresorhus/create-dmg) tool that created a good-looking DMG for this app in seconds.
