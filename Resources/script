@@ -336,8 +336,10 @@ def main(args):
 
       if args.rename:
         trailer = PdfReader(f)
-        trailer.Info.Title = title
-        PdfWriter(f, trailer=trailer).write()
+        if not trailer.Info.Title or trailer.Info.Title.strip("()") != title:
+          print("NOTIFICATION: Update title in metadata from %s to %s.\n" % (trailer.Info.Title, title))
+          trailer.Info.Title = title
+          PdfWriter(f, trailer=trailer).write()
         filename = '{}.pdf'.format(sanitize_filename(title))
         filepath = os.path.join(os.path.dirname(f), filename)
         os.rename(f, filepath)

@@ -33,7 +33,7 @@
 	<key>IconPath</key>
 	<string>Resources/AppIcon.icns</string>
 	<key>Identifier</key>
-	<string>im.atom.PaperRenamerMeta</string>
+	<string>im.atom.PaperRenamerMetadata</string>
 	<key>InterfaceType</key>
 	<string>Droplet</string>
 	<key>InterpreterArgs</key>
@@ -254,6 +254,6 @@
 		<string>com.adobe.pdf</string>
 	</array>
 	<key>Version</key>
-	<string>1.1</string>
+	<string>1.2</string>
 </dict>
 </plist>
