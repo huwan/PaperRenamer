@@ -1,36 +1,56 @@
 # Paper Renamer
 
-Rename academic paper files to human friendly names with the paper titles.
+Easily rename your academic paper file to more readable name using the title of the paper.
 
 ![PaperRenamer Demo](demo.gif)
 
 ## Paper Renamer for MacOS
 
-PaperRenamer for MacOS is a native MacOS application created from the modified Python script [pdftitle](https://github.com/huwan/pdftitle) using [Platypus](https://sveinbjorn.org/platypus). This is done by wrapping the script in a MacOS application bundle along with an executable binary that runs the script.
+Paper Renamer is a dedicated MacOS application that transforms the [pdftitle](https://github.com/huwan/pdftitle) Python script into a native MacOS app using [Platypus](https://sveinbjorn.org/platypus). It packages the script into a MacOS application bundle, complete with an executable that runs the script.
 
 ### Installation
 
 **Available packages**
 
-- Download the latest DMG file from releases page [here](https://github.com/huwan/PaperRenamer/releases).
+- Download the newest DMG file from the releases page [here](https://github.com/huwan/PaperRenamer/releases).
 
-- Double-click the DMG file to open it, and you’ll see a Finder window. Simply drag the application’s icon to your Applications folder and you’re done.
+- Open the DMG file by double-clicking it, which will display a Finder window. Drag the app icon to your Applications folder to install.
 
-**Build and install manually**
+**Manual build and installation**
 
-We provide a profile which saves Platypus's configuration settings for building the application. All other necessary files (python script, pdftohtml tool, and icon files) can be found in the `Resources` directory.
+A Platypus profile is provided to save the configuration settings necessary for building the app. You can find the Python script, pdftohtml tool, and icon files in the `Resources` directory.
 
-- Install [Platypus](https://sveinbjorn.org/platypus).
-- Double-click the profile `Paper Renamer.platypus` which have a .platypus filename suffix. Or launch Platypus and load the profile by selecting it from the menu (Profiles → Load Profile...).
-- Click "Create App" to generate the application.
-- Move the `Paper Renamer.app` to your Applications folder.
+- First, install [Platypus](https://sveinbjorn.org/platypus).
+- Open the `Paper Renamer.platypus` profile by double-clicking, or load it in Platypus via the menu (Profiles → Load Profile...).
+- Press "Create App" to build the application.
+- Transfer the `Paper Renamer.app` into your Applications folder.
 
 ### Usage
-Simply launch the `Paper Renamer.app`, drag and drop your pdf files to the square window. You can also open pdf files by selecting it from the menu.
+Launch `Paper Renamer.app` to start renaming your PDF files. You can rename files by dragging and dropping them into the app’s window or by selecting files through the menu.
+
+For a quick rename, right-click a PDF file, choose "Open With," and then select "Paper Renamer" to automatically rename the file based on its title.
+
+### Notes: Python 2 Installation on macOS
+
+With macOS 12.3 and later no longer supporting Python 2 natively, Paper Renamer requires a manual installation of Python 2. Follow these steps:
+
+1. Install `pyenv` via Homebrew:
+   ```bash
+   brew install pyenv
+   ```
+2. Use `pyenv` to install Python 2.7.18:
+   ```bash
+   pyenv install 2.7.18
+   ```
+3. Modify the shebang line in the `Resources/script` file within the Paper Renamer project or `/Applications/Paper Renamer.app/Contents/Resources/script` to:
+   ```
+   #!/Users/atom/.pyenv/versions/2.7.18/bin/python2.7
+   ```
+   Adjust the path to match your installation location of Python 2.7.18.
 
 ## Credits
 
-Thanks go to Uwe Dauernheim, the original author of the [pdftitle](https://github.com/djui/pdftitle) tool used for PDF article title extraction in Paper Renamer, Sveinbjorn Thordarson, author of [Platypus](https://sveinbjorn.org/platypus) which is a great developer tool that created this MacOS application from command line script, and Sindre Sorhus for [create-dmg](https://github.com/sindresorhus/create-dmg) tool that created a good-looking DMG for this app in seconds.
+Special thanks to Uwe Dauernheim for developing the [pdftitle](https://github.com/djui/pdftitle) tool, Sveinbjorn Thordarson for creating [Platypus](https://sveinbjorn.org/platypus), and Sindre Sorhus for the [create-dmg](https://github.com/sindresorhus/create-dmg) tool which simplifies DMG creation.
 
 ## Acknowledgements
 
@@ -43,4 +63,4 @@ Thanks go to Uwe Dauernheim, the original author of the [pdftitle](https://githu
 
 ## License
 
-Code is licensed under the [BSD 2-Clause "Simplified" License](LICENSE). Icon made by [phatplus](https://www.flaticon.com/authors/phatplus) from [www.flaticon.com](https://www.flaticon.com) is licensed by [CC 3.0 BY](https://creativecommons.org/licenses/by/3.0/).
+The code is available under the [BSD 2-Clause "Simplified" License](LICENSE). The icon, created by [phatplus](https://www.flaticon.com/authors/phatplus) from [www.flaticon.com](https://www.flaticon.com), is licensed under [CC 3.0 BY](https://creativecommons.org/licenses/by/3.0/).
