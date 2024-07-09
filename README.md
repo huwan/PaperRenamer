@@ -21,14 +21,14 @@ Paper Renamer is a dedicated MacOS application that transforms the [pdftitle](ht
 A Platypus profile is provided to save the configuration settings necessary for building the app. You can find the Python script, pdftohtml tool, and icon files in the `Resources` directory.
 
 - First, install [Platypus](https://sveinbjorn.org/platypus).
-- Open the `Paper Renamer.platypus` profile by double-clicking, or load it in Platypus via the menu (Profiles → Load Profile...).
+- Open the `Paper Renamer.platypus` profile by double-clicking, or load it in Platypus via the menu (Profiles → Load Profile...). Adjust the configuration as needed.
 - Press "Create App" to build the application.
 - Transfer the `Paper Renamer.app` into your Applications folder.
 
 ### Usage
 Launch `Paper Renamer.app` to start renaming your PDF files. You can rename files by dragging and dropping them into the app’s window or by selecting files through the menu.
 
-For a quick rename, right-click a PDF file, choose "Open With," and then select "Paper Renamer" to automatically rename the file based on its title.
+For a quick rename, right-click on a PDF file, select "Open With," and then choose "Paper Renamer" to automatically rename the file based on its title. For an improved experience, it is recommended to change the Platypus `Interface` option from `Droplet` to `None`. This will ensure that no GUI window appears, allowing for silent renaming without interruption.
 
 ## Credits
 

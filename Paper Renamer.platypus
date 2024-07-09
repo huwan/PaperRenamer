@@ -38,7 +38,7 @@
 	<key>InterpreterArgs</key>
 	<array/>
 	<key>InterpreterPath</key>
-	<string>/Users/atom/.pyenv/versions/2.7.18/bin/python2.7</string>
+	<string>/usr/bin/python3</string>
 	<key>Name</key>
 	<string>Paper Renamer</string>
 	<key>NibPath</key>
@@ -58,7 +58,7 @@
 	<key>ScriptPath</key>
 	<string>Resources/script</string>
 	<key>SendNotifications</key>
-	<false/>
+	<true/>
 	<key>StatusItemDisplayType</key>
 	<string>Text</string>
 	<key>StatusItemIcon</key>
@@ -256,6 +256,6 @@
 		<string>com.adobe.pdf</string>
 	</array>
 	<key>Version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 </dict>
 </plist>
