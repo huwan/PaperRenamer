@@ -12,8 +12,7 @@ Paper Renamer is a dedicated MacOS application that transforms the [pdftitle](ht
 
 **Available packages**
 
-- Download the newest DMG file from the releases page [here](https://github.com/huwan/PaperRenamer/releases).
-
+- Download the latest DMG file from the releases page [here](https://github.com/huwan/PaperRenamer/releases/latest). Choose between Paper Renamer and Paper Renamer Daemon depending on your requirements. For background renaming of papers without a GUI, right-click on PDF files and select "Open With Paper Renamer Daemon."
 - Open the DMG file by double-clicking it, which will display a Finder window. Drag the app icon to your Applications folder to install.
 
 **Manual build and installation**
