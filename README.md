@@ -30,24 +30,6 @@ Launch `Paper Renamer.app` to start renaming your PDF files. You can rename file
 
 For a quick rename, right-click a PDF file, choose "Open With," and then select "Paper Renamer" to automatically rename the file based on its title.
 
-### Notes: Python 2 Installation on macOS
-
-With macOS 12.3 and later no longer supporting Python 2 natively, Paper Renamer requires a manual installation of Python 2. Follow these steps:
-
-1. Install `pyenv` via Homebrew:
-   ```bash
-   brew install pyenv
-   ```
-2. Use `pyenv` to install Python 2.7.18:
-   ```bash
-   pyenv install 2.7.18
-   ```
-3. Modify the shebang line in the `Resources/script` file within the Paper Renamer project or `/Applications/Paper Renamer.app/Contents/Resources/script` to:
-   ```
-   #!/Users/atom/.pyenv/versions/2.7.18/bin/python2.7
-   ```
-   Adjust the path to match your installation location of Python 2.7.18.
-
 ## Credits
 
 Special thanks to Uwe Dauernheim for developing the [pdftitle](https://github.com/djui/pdftitle) tool, Sveinbjorn Thordarson for creating [Platypus](https://sveinbjorn.org/platypus), and Sindre Sorhus for the [create-dmg](https://github.com/sindresorhus/create-dmg) tool which simplifies DMG creation.
