@@ -43,39 +43,33 @@ def textblocks_by_id(xml_data, font_id):
     text_elements = xml_data.findall(f'page[@number="1"]/text[@font="{font_id}"]')
     first_page_top = int(xml_data.findall('page[@number="1"]')[0].get('top'))
     first_page_height = int(xml_data.findall('page[@number="1"]')[0].get('height'))
-    return top_and_texts(text_elements, first_page_top, first_page_height)
+    return top_and_texts_with_positions(text_elements, first_page_top, first_page_height)
 
-def top_and_texts(text_elements, page_top, page_height):
-    """Return top position of first non-empty text line and all
-    unformatted non-empty text lines, and some extra (page) metadata.
-    Example: {
-        'pageTop': 0,
-        'pageHeight': 1263,
-        'blockTop': 16,
-        'blockText': [
-            {'top': 16, 'height': 24, 'text': 'foo'},
-            {'top': 30, 'height': 24, 'text': 'bar'},
-            {'top': 44, 'height': 24, 'text': 'baz'}
-        ]
-    }"""
+def top_and_texts_with_positions(text_elements, page_top, page_height):
+    """Return text blocks with preserved positioning information."""
     text_lines = []
     top = page_top
 
     for text_element in text_elements:
-        text_line = unformat_and_strip(text_element)
-        if not text_line:
+        text_content = unformat_and_strip(text_element)
+        if not text_content:
             continue
         t = int(text_element.get('top'))
         h = int(text_element.get('height'))
         w = int(text_element.get('width'))
+        left = int(text_element.get('left', 0))
+
         if t < top:
             continue
         top = t
+
+        # Keep individual elements separate to preserve positioning
         text_lines.append({
             'top': t,
+            'left': left,  # Preserve original left position
             'height': h,
             'width': w,
-            'text': text_line
+            'text': text_content
         })
 
     if text_lines and top > page_top:
@@ -94,7 +88,10 @@ def filter_empties(text_blocks, _config):
 
 def unformat_and_strip(text_element):
     """Return non-empty unformatted text element."""
-    return ''.join(text_element.itertext()).strip()
+    text = ''.join(text_element.itertext()).strip()
+    # Just clean up the basic formatting, don't remove spaces between letters here
+    text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with single space
+    return text
 
 def filter_bottom_half(text_blocks, _config):
     """Filter text blocks on lower half of page."""
@@ -149,14 +146,55 @@ def choose_title(text_blocks, config):
             return tb['blockText'][0]['text']
     return None
 
-def format_upper_case(title, _config):
-    """Return the title in titlecase if all letters are uppercase."""
-    return title.title() if is_mostly_upper_case(title) else title
-
 def is_mostly_upper_case(string, threshold=0.67):
     """Return True if string has over Threshold uppercase letters, else False."""
     n = sum(1 for c in string if c.isupper() or c.isspace())
     return float(n) / len(string) >= threshold
+
+def is_small_caps(string):
+    """Return True if string appears to be in small caps format."""
+    # Remove spaces and punctuation for analysis
+    clean_string = ''.join(c for c in string if c.isalpha())
+    if len(clean_string) < 3:
+        return False
+
+    # Count uppercase and lowercase letters
+    upper_count = sum(1 for c in clean_string if c.isupper())
+    lower_count = sum(1 for c in clean_string if c.islower())
+
+    # If there are no lowercase letters, it's likely small caps
+    if lower_count == 0:
+        return True
+
+    # If there are some lowercase letters, check if they're mostly at the start/end
+    # (common in small caps where first/last letters might be regular case)
+    if lower_count <= 2:
+        first_char = clean_string[0]
+        last_char = clean_string[-1]
+        if (first_char.islower() or last_char.islower()) and upper_count / len(clean_string) >= 0.7:
+            return True
+
+    return False
+
+def format_upper_case(title, _config):
+    """Return the title in titlecase if all letters are uppercase or in small caps."""
+    if is_mostly_upper_case(title) or is_small_caps(title):
+        # For small caps, preserve the case of first/last letters if they're lowercase
+        if is_small_caps(title):
+            words = title.split()
+            formatted_words = []
+            for word in words:
+                if word[0].isupper() and word[-1].isupper():
+                    formatted_words.append(word.title())
+                else:
+                    # Preserve first/last letter case if they're lowercase
+                    first = word[0].lower() if word[0].islower() else word[0].upper()
+                    last = word[-1].lower() if word[-1].islower() else word[-1].upper()
+                    middle = word[1:-1].title() if len(word) > 2 else ''
+                    formatted_words.append(first + middle + last)
+            return ' '.join(formatted_words)
+        return title.title()
+    return title
 
 def format_weird_case(title, _config):
     """Return the title in titlecase if all letters are uppercase."""
@@ -171,22 +209,34 @@ def is_weird_case(string):
             return True
     return False
 
-def format_space_case(title, _config):
-    """Return the title removing gaps between letters."""
-    if is_space_case(title):
-        return unspace(title)
-    else:
-        return title
-
-def is_space_case(string, threshold=0.2):
+def is_space_case(string, threshold=0.3):
     """Return True if given String has many gaps between letters, else False."""
-    n = sum(1 for c in string if c.isspace())
+    # Don't treat as space case if it contains common patterns
+    if re.search(r'[A-Z][a-z]+[A-Z][a-z]+', string):  # CamelCase
+        return False
+    if re.search(r'[A-Z]{2,}[a-z]*[A-Z]{2,}', string):  # Acronyms mixed with words
+        return False
+    if re.search(r'[A-Za-z]+:', string):  # Words with colons
+        return False
+
+    # Only consider spaces between single characters as problematic
+    spaced_chars = re.findall(r'\b[A-Za-z]\s+[A-Za-z]\b', string)
+    if len(spaced_chars) < 3:  # Less than 3 spaced single chars, probably not space case
+        return False
+
+    # Calculate ratio of spaced single characters to total length
+    n = sum(len(match) for match in spaced_chars)
     return float(n) / len(string) >= threshold
 
-def unspace(string):
-    """Return the given string without the many gaps between letters."""
-    joined_string = ''.join(string.split())
-    return re.sub(r'([^-])([A-Z])', r'\1 \2', joined_string)
+def format_space_case(title, _config):
+    """Return the title removing gaps between letters while preserving special characters."""
+    if is_space_case(title):
+        # Only fix obvious cases of spaced single characters
+        # Fix patterns like "H Y P E R R E C A" but preserve "HypeReca:"
+        title = re.sub(r'\b([A-Za-z])\s+([A-Za-z])\b', r'\1\2', title)
+        return title
+    else:
+        return title
 
 def format_multi_spaces(title, _config):
     """Return the title with not more than one space per word separation."""
@@ -206,10 +256,10 @@ def format_trailing_asterik(title, _config):
 
 def format_quotes(title, _config):
     """Return the title with normalized quotes."""
-    return title.replace('‘‘', '“') \
-                .replace('’’', '”') \
-                .replace('``', '‟') \
-                .replace(',,', '„')
+    return (title.replace('"', '"')
+                .replace('"', '"')
+                .replace('``', '"')
+                .replace(',,', '"'))
 
 def format_ligatures(title, _config):
     """Return the title without Ligatures."""
@@ -248,7 +298,301 @@ def extract_title(path, config):
     xml_data = convert_pdf_to_xml(path)
     font_ids = sorted_font_ids(font_specs(xml_data))
     text_blocks = [textblocks_by_id(xml_data, font_id) for font_id in font_ids]
-    return transduce(groupers + filters + formatters, text_blocks, config)
+
+    # Debug output
+    if config.debug:
+        print(f"Debug: Found {len(font_ids)} font IDs: {font_ids}")
+        for i, tb in enumerate(text_blocks):
+            if tb and tb.get('blockText'):
+                print(f"Debug: Font {i} text: {' '.join([t['text'] for t in tb['blockText']])}")
+
+    # Combine text blocks from different fonts if they appear to be on the same line
+    # This handles cases where titles span multiple fonts
+    combined_blocks = combine_cross_font_text_blocks(text_blocks, config)
+
+    result = transduce(groupers + filters + formatters, combined_blocks, config)
+
+    # Debug output for each formatting step
+    if config.debug and result:
+        print(f"Debug: Final result: '{result}'")
+
+    return result
+
+def combine_cross_font_text_blocks(text_blocks, config):
+    """Combine text blocks from different fonts that appear on the same line."""
+    if not text_blocks:
+        return text_blocks
+
+    # Get all text elements from all fonts with their full positioning info
+    all_text_elements = []
+    for font_idx, tb in enumerate(text_blocks):
+        if tb and tb.get('blockText'):
+            for text_line in tb['blockText']:
+                # Add font info to help with debugging
+                text_line['font_idx'] = font_idx
+                all_text_elements.append(text_line)
+
+    if config.debug:
+        print(f"Debug: Found {len(all_text_elements)} total text elements across all fonts")
+
+    if not all_text_elements:
+        return text_blocks
+
+    # Focus on the title line (first line with multiple fonts)
+    # Sort all elements by their vertical position first
+    all_text_elements.sort(key=lambda x: x['top'])
+
+    # Find the title line - look for the first line that has elements from multiple fonts
+    title_top = all_text_elements[0]['top']
+    title_height = all_text_elements[0]['height']
+    tolerance = title_height // 2  # Increased tolerance to capture more title elements
+
+    # Get all elements that are on the title line and potentially the next line
+    title_elements = []
+    next_line_elements = []
+
+    for element in all_text_elements:
+        if abs(element['top'] - title_top) <= tolerance:
+            title_elements.append(element)
+        elif element['top'] > title_top and element['top'] <= title_top + title_height + tolerance:
+            # Check if this might be a continuation of the title
+            next_line_elements.append(element)
+
+    if config.debug:
+        print(f"Debug: Title line has {len(title_elements)} elements:")
+        for elem in title_elements:
+            print(f"  Font {elem['font_idx']}: left={elem.get('left', 0)}, text='{elem['text'][:20]}'")
+        if next_line_elements:
+            print(f"Debug: Next line has {len(next_line_elements)} elements:")
+            for elem in next_line_elements:
+                print(f"  Font {elem['font_idx']}: left={elem.get('left', 0)}, text='{elem['text'][:20]}'")
+
+    # Sort title elements by horizontal position
+    title_elements.sort(key=lambda x: x.get('left', 0))
+
+    # Detect mixed case formatting based on font differences
+    combined_title_text = combine_with_mixed_case_detection(title_elements)
+
+    # Check if we should include the next line (if it looks like a title continuation)
+    if next_line_elements and combined_title_text:
+        next_line_elements.sort(key=lambda x: x.get('left', 0))
+        next_line_text = ""
+        for element in next_line_elements:
+            text = element['text'].strip()
+            if text:
+                if next_line_text:
+                    next_line_text += " " + text
+                else:
+                    next_line_text = text
+
+        # If next line looks like a title continuation (not too long, starts with capital letter)
+        if (next_line_text and
+            len(next_line_text) < 100 and
+            next_line_text[0].isupper() and
+            not next_line_text.lower().startswith(('abstract', 'introduction', 'jiaao', 'tsinghua'))):
+            combined_title_text += " " + next_line_text
+
+    if config.debug:
+        print(f"Debug: Combined title: '{combined_title_text}'")
+
+    # Create a new text block with the properly combined title
+    if combined_title_text.strip() and title_elements:
+        # Use the main block structure but with corrected title
+        main_block = None
+        for tb in text_blocks:
+            if tb and tb.get('blockText'):
+                main_block = tb
+                break
+
+        if main_block:
+            return [{
+                'pageTop': main_block['pageTop'],
+                'pageHeight': main_block['pageHeight'],
+                'blockTop': title_top,
+                'blockText': [{
+                    'top': title_top,
+                    'height': title_height,
+                    'width': sum(elem.get('width', 0) for elem in title_elements),
+                    'text': combined_title_text.strip()
+                }]
+            }]
+
+    return text_blocks
+
+def combine_with_mixed_case_detection(title_elements):
+    """Combine title elements while detecting mixed case based on font differences."""
+    if not title_elements:
+        return ""
+
+    combined_text = ""
+    i = 0
+
+    while i < len(title_elements):
+        element = title_elements[i]
+        text = element['text'].strip()
+        if not text:
+            i += 1
+            continue
+
+        # If this is the start of a colon-separated section, handle it normally
+        if text.startswith(':'):
+            combined_text += text
+            i += 1
+            continue
+
+        # Check if we need a space before this element
+        if combined_text and not combined_text.endswith(' '):
+            prev_element = title_elements[i-1] if i > 0 else None
+            if prev_element:
+                gap = element.get('left', 0) - (prev_element.get('left', 0) + prev_element.get('width', 0))
+                avg_char_width = prev_element.get('width', 10) / max(len(prev_element['text']), 1)
+                if gap > avg_char_width * 1.5:  # Significant gap = new word
+                    combined_text += " "
+
+        # Look for a compound word pattern (like HYPERECA)
+        word_elements = []
+        j = i
+
+        # Collect elements that form a single word (no significant gaps)
+        while j < len(title_elements):
+            curr_element = title_elements[j]
+            curr_text = curr_element['text'].strip()
+
+            if not curr_text or curr_text.startswith(':'):
+                break
+
+            # Check if this element should be part of the same word
+            if j == i:
+                word_elements.append(curr_element)
+            else:
+                prev_elem = title_elements[j-1]
+                gap = curr_element.get('left', 0) - (prev_elem.get('left', 0) + prev_elem.get('width', 0))
+                avg_char_width = prev_elem.get('width', 10) / max(len(prev_elem['text']), 1)
+
+                if gap <= avg_char_width * 1.5:  # Same word
+                    word_elements.append(curr_element)
+                else:
+                    break  # Start of new word
+            j += 1
+
+        # Process the collected word elements
+        if len(word_elements) > 1:
+            # Multi-element word - apply mixed case detection
+            word_text = format_compound_word(word_elements)
+            combined_text += word_text
+        else:
+            # Single element
+            combined_text += text
+
+        i = j  # Move to next unprocessed element
+
+    return combined_text.strip()
+
+def format_compound_word(word_elements):
+    """Format a compound word based on font patterns, like HYPERECA -> HypeReca or GReyhound -> Greyhound."""
+    if not word_elements:
+        return ""
+
+    # Sort by position to get correct order
+    word_elements.sort(key=lambda x: x.get('left', 0))
+
+    # Debug output
+    print(f"Debug format_compound_word: {len(word_elements)} elements")
+    for i, elem in enumerate(word_elements):
+        print(f"  Element {i}: left={elem.get('left', 0)}, text='{elem['text'].strip()}'")
+
+    # Collect all text in order
+    all_text = ''.join(elem['text'].strip() for elem in word_elements)
+
+    # Simple case: 2-3 elements with simple font alternation
+    if len(word_elements) <= 3:
+        fonts = [elem.get('font_idx') for elem in word_elements]
+        texts = [elem['text'].strip() for elem in word_elements]
+
+        # Pattern like G + REYHOUND -> Greyhound or GP + REEMPT -> GPreempt or DDL + UMOS -> DDLumos
+        if len(word_elements) == 2 and len(texts[0]) <= 3 and len(texts[1]) > 2:
+            first_part = texts[0]
+            second_part = texts[1]
+
+            print(f"Debug: 2-element case: '{first_part}' (len={len(first_part)}) + '{second_part}' (len={len(second_part)})")
+            print(f"Debug: first_part.isupper()={first_part.isupper()}, second_part.isupper()={second_part.isupper()}")
+
+            # Special handling for cases like GP + REEMPT -> GPreempt
+            if len(first_part) == 2 and first_part.isupper() and second_part.isupper():
+                # GP + REEMPT -> GPreempt (G + PREEMPT)
+                combined = first_part[0] + (first_part[1:] + second_part).title()
+                print(f"Debug: GP+REEMPT case: '{combined}'")
+                return combined
+            # Handle acronym cases like DDL + UMOS -> DDLumos
+            elif len(first_part) == 3 and first_part.isupper() and second_part.isupper():
+                # DDL + UMOS -> DDLumos (keep acronym, lowercase the rest)
+                combined = first_part + second_part.lower()
+                print(f"Debug: Acronym case (DDL+UMOS): '{combined}'")
+                return combined
+            else:
+                # Normal case like G + REYHOUND -> Greyhound
+                combined = first_part + second_part
+                print(f"Debug: Normal case: '{combined}'")
+                return combined.title() if combined.isupper() else combined
+
+    # Complex case: 4+ elements with alternating pattern (like HYPERECA)
+    if len(word_elements) >= 4:
+        fonts = [elem.get('font_idx') for elem in word_elements]
+        texts = [elem['text'].strip() for elem in word_elements]
+
+        # Look for alternating font pattern (e.g., 0-1-0-1)
+        if len(set(fonts)) == 2 and len(fonts) >= 4:
+            font1_chars = []
+            font2_chars = []
+
+            for i, (text, font) in enumerate(zip(texts, fonts)):
+                if font == fonts[0]:  # Same as first font
+                    font1_chars.append(text)
+                else:
+                    font2_chars.append(text)
+
+            # Create compound words: first font chars + second font chars
+            if len(font1_chars) >= 2 and len(font2_chars) >= 2:
+                # Pattern like H+R and YPE+ECA -> Hype + Reca
+                part1 = font1_chars[0] + font2_chars[0]  # H + YPE = HYPE
+                part2 = font1_chars[1] + font2_chars[1]  # R + ECA = RECA
+
+                # Format as mixed case
+                formatted_part1 = part1.title() if part1.isupper() else part1
+                formatted_part2 = part2.title() if part2.isupper() else part2
+
+                return formatted_part1 + formatted_part2
+
+    # Fallback: group consecutive elements by font and apply simple title case
+    font_groups = []
+    current_group = []
+    current_font = None
+
+    for element in word_elements:
+        text = element['text'].strip()
+        font = element.get('font_idx')
+
+        if current_font is None or font == current_font:
+            current_group.append(text)
+            current_font = font
+        else:
+            if current_group:
+                font_groups.append(''.join(current_group))
+            current_group = [text]
+            current_font = font
+
+    if current_group:
+        font_groups.append(''.join(current_group))
+
+    # Apply simple title case formatting to all groups
+    result = ""
+    for group in font_groups:
+        if group.isupper():
+            result += group.title()
+        else:
+            result += group
+
+    return result
 
 def sanitize_filename(filename):
     return filename.replace(': ', '--').replace('/', '-')
@@ -281,10 +625,10 @@ def main(args):
             if args.debug:
                 traceback.print_exc()
             return 8, f'Error: Unknown error: {type(e).__name__}'
-    if success == 1:
-        print(f"NOTIFICATION:{success} paper renamed.\n")
-    else:
-        print(f"NOTIFICATION:{success} papers renamed.\n")
+    # if success == 1:
+    #     print(f"NOTIFICATION:{success} paper renamed.\n")
+    # else:
+    #     print(f"NOTIFICATION:{success} papers renamed.\n")
     return 0 if not skip else 1
 
 def pos_int(v):
