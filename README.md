@@ -1,5 +1,9 @@
 # Paper Renamer
 
+> **⚠️ Important Notice:** This repository is no longer actively maintained. Please use [AI Paper Renamer](https://github.com/huwan/ai-paper-renamer) instead!
+>
+> **AI Paper Renamer** automatically renames academic PDF files using AI-extracted titles with a single keyboard shortcut. It provides a more modern and efficient approach to renaming your academic papers.
+
 Easily rename your academic paper file to more readable name using the title of the paper.
 
 ![PaperRenamer Demo](demo.gif)
